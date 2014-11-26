@@ -1,37 +1,42 @@
 import unittest
+import operator
 
 
 class Diamond(object):
     def print_up_to(self, limit):
-        return self.seq_for(limit)
+        return reduce(
+            operator.concat,
+            (
+                self.build_line(c, limit)
+                for c in self.letters_up_to_and_back(limit))
+            )
 
-    def letters_up_to(self, limit):
-        for o in range(ord('A'), ord(limit) + 1):
+    def letters_up_to_and_back(self, limit):
+        letters_from_a_to_limit = range(ord('A'), ord(limit))
+        for o in letters_from_a_to_limit:
             yield chr(o)
-        for o in reversed(range(ord('A'), ord(limit))):
+        yield limit
+        for o in reversed(letters_from_a_to_limit):
             yield chr(o)
+
+    def build_line(self, current, limit):
+        line = self.indent(current, limit)
+        line += current
+        line += self.seperator(current)
+        if current > 'A':
+            line += current
+        line += "\n"
+        return line
 
     def indent(self, current, limit):
-        if current != limit:
-            return " "
-        return ""
+        return self.spaces(ord(limit) - ord(current))
 
-    def seq_for(self, limit):
-        result = ""
-        for current in self.letters_up_to(limit):
-            result += self.indent(current, limit)
-            result += current
-            result += self.seperator(current)
-            if current > 'A':
-                result += current
-            result += "\n"
-
-        return result
+    def spaces(self, count):
+        return " " * count
 
     def seperator(self, current):
-        if current != 'A':
-            return " "
-        return ""
+        distance = ord(current) - ord('A')
+        return self.spaces(distance * 2 - 1)
 
 
 class DiamondTest(unittest.TestCase):
@@ -43,6 +48,21 @@ class DiamondTest(unittest.TestCase):
                          "B B\n"
                          " A\n", Diamond().print_up_to('B'))
 
+    def test_c_is_a_bigger_diamond(self):
+        self.assertEqual("  A\n"
+                         " B B\n"
+                         "C   C\n"
+                         " B B\n"
+                         "  A\n", Diamond().print_up_to('C'))
+
+    def test_d_is_an_even_bigger_diamond(self):
+        self.assertEqual("   A\n"
+                         "  B B\n"
+                         " C   C\n"
+                         "D     D\n"
+                         " C   C\n"
+                         "  B B\n"
+                         "   A\n", Diamond().print_up_to('D'))
 
 if __name__ == '__main__':
     unittest.main()
